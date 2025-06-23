@@ -532,3 +532,206 @@ printf("\nPage\tFrames\t\tStatus\n");
 
 
 ---------------------------------------
+
+
+#FCFS CPU SCHEDULING 
+
+#include <stdio.h>
+int main() {
+    int n, i, j;
+    int at[20], bt[20], ct[20], tat[20], wt[20], pid[20];
+    int total_tat = 0, total_wt = 0;
+    int temp;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    for(i = 0; i < n; i++) {
+        pid[i] = i + 1;
+        printf("Enter Arrival Time for Process P%d: ", pid[i]);
+        scanf("%d", &at[i]);
+        printf("Enter Burst Time for Process P%d: ", pid[i]);
+        scanf("%d", &bt[i]);
+    }
+    for(i = 0; i < n - 1; i++) {
+        for(j = i + 1; j < n; j++) {
+            if(at[i] > at[j]) {
+                temp = at[i]; at[i] = at[j]; at[j] = temp;
+                temp = bt[i]; bt[i] = bt[j]; bt[j] = temp;
+                temp = pid[i]; pid[i] = pid[j]; pid[j] = temp;
+            }
+        }
+    }
+    int current_time = 0;
+    for(i = 0; i < n; i++) {
+        if(current_time < at[i])
+            current_time = at[i];
+        current_time += bt[i];
+        ct[i] = current_time;
+        tat[i] = ct[i] - at[i];        
+        wt[i] = tat[i] - bt[i];       
+        total_tat += tat[i];
+        total_wt += wt[i];
+    }
+printf("\nProcess\tAT\tBT\tCT\tTAT\tWT\n");
+    for(i = 0; i < n; i++) {        printf("P%d\t%d\t%d\t%d\t%d\t%d\n", pid[i], at[i], bt[i], ct[i], tat[i], wt[i]);
+    }
+    printf("\nAverage Turnaround Time = %.2f", (float)total_tat / n);
+    printf("\nAverage Waiting Time = %.2f\n", (float)total_wt / n);
+    printf("\nGantt Chart:\n|");
+    for(i = 0; i < n; i++) {
+        printf("  P%d  |", pid[i]);
+    }
+    printf("\n%d", at[0] < 0 ? 0 : at[0]);
+    for(i = 0; i < n; i++) {
+        printf("     %d", ct[i]);
+    }
+    printf("\n");
+    return 0;
+}
+
+
+
+### NON PREEMPTIVE SJFFF
+
+#include <stdio.h>
+int main() {
+    int n, i, shortest, time = 0, completed_count = 0;
+    int at[20], bt[20], ct[20], tat[20], wt[20], pid[20], completed[20] = {0};
+    int total_tat = 0, total_wt = 0;
+    // For Gantt Chart
+    int gantt_pid[20], gantt_start[20], gantt_end[20], gantt_index = 0;
+    // Input number of processes
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    // Input arrival time and burst time
+    for(i = 0; i < n; i++) {
+        pid[i] = i + 1;
+        printf("Enter Arrival Time for Process P%d: ", pid[i]);
+        scanf("%d", &at[i]);
+        printf("Enter Burst Time for Process P%d: ", pid[i]);
+        scanf("%d", &bt[i]);
+    }
+    // Main SJF scheduling loop
+    while(completed_count < n) {
+        int min_bt = 9999;
+        shortest = -1;
+        // Find the process with the shortest burst time at current time
+        for(i = 0; i < n; i++) {
+            if(at[i] <= time && completed[i] == 0 && bt[i] < min_bt) {
+                min_bt = bt[i];
+                shortest = i;
+            }
+        }
+        if(shortest == -1) {
+            time++; // CPU is idle
+        } else {
+            gantt_pid[gantt_index] = pid[shortest];
+            gantt_start[gantt_index] = time;
+            time += bt[shortest];               // Process runs to completion
+            ct[shortest] = time;
+            completed[shortest] = 1;
+            completed_count++;
+            tat[shortest] = ct[shortest] - at[shortest];   // TAT = CT - AT
+            wt[shortest] = tat[shortest] - bt[shortest];
+            total_tat += tat[shortest];
+            total_wt += wt[shortest];
+            gantt_end[gantt_index] = time;
+            gantt_index++;
+        }
+    }
+printf("\nProcess\tAT\tBT\tCT\tTAT\tWT\n");
+    for(i = 0; i < n; i++) {        printf("P%d\t%d\t%d\t%d\t%d\t%d\n", pid[i], at[i], bt[i], ct[i], tat[i], wt[i]);
+    }
+    printf("\nAverage Turnaround Time = %.2f", (float)total_tat / n);
+    printf("\nAverage Waiting Time = %.2f\n", (float)total_wt / n);
+    // Gantt chart display
+    printf("\nGantt Chart:\n");
+    printf("|");
+    for(i = 0; i < gantt_index; i++) {
+        printf("  P%d  |", gantt_pid[i]);
+    }
+    printf("\n");
+    printf("%d", gantt_start[0]);
+    for(i = 0; i < gantt_index; i++) {
+        printf("     %d", gantt_end[i]);
+    }
+    printf("\n");
+    return 0;
+}
+
+
+
+### PREEMPTIVE SJFF (SRTF) 
+
+
+#include <stdio.h>
+int main() {
+    int n, i, time = 0, smallest = -1;
+    int at[20], bt[20], rt[20], ct[20], wt[20], tat[20], pid[20];
+    int completed = 0, min_rt = 9999;
+    float total_wt = 0, total_tat = 0;
+    int gantt_pid[100], gantt_time[100], gantt_index = 0;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    for(i = 0; i < n; i++) {
+        pid[i] = i + 1;
+        printf("Enter Arrival Time for Process P%d: ", pid[i]);
+        scanf("%d", &at[i]);
+        printf("Enter Burst Time for Process P%d: ", pid[i]);
+        scanf("%d", &bt[i]);
+        rt[i] = bt[i];
+    }
+    int prev_process = -1;
+    while(completed < n) {
+        smallest = -1;
+        min_rt = 9999;
+        for(i = 0; i < n; i++) {
+            if(at[i] <= time && rt[i] > 0 && rt[i] < min_rt) {
+                min_rt = rt[i];
+                smallest = i;
+            }
+        }
+        if(smallest == -1) {
+            if(prev_process != -1) {
+                gantt_pid[gantt_index] = -1;                gantt_time[gantt_index++] = time;
+                prev_process = -1;
+            }
+            time++;
+            continue;
+        }
+        if(prev_process != pid[smallest]) {
+            gantt_pid[gantt_index] = pid[smallest];
+            gantt_time[gantt_index++] = time;
+            prev_process = pid[smallest];
+        }
+        rt[smallest]--;
+        time++;
+        if(rt[smallest] == 0) {
+            completed++;
+            ct[smallest] = time;
+            tat[smallest] = ct[smallest] - at[smallest];
+            wt[smallest] = tat[smallest] - bt[smallest];
+            total_tat += tat[smallest];
+            total_wt += wt[smallest];
+        }
+    }
+    gantt_time[gantt_index] = time;    printf("\nProcess\tAT\tBT\tCT\tTAT\tWT\n");
+    for(i = 0; i < n; i++) {        printf("P%d\t%d\t%d\t%d\t%d\t%d\n", pid[i], at[i], bt[i], ct[i], tat[i], wt[i]);
+    }
+    printf("\nAverage Waiting Time = %.2f", total_wt / n);
+    printf("\nAverage Turnaround Time = %.2f\n", total_tat / n);
+m
+    printf("\nGantt Chart:\n");
+    for(i = 0; i < gantt_index; i++) {
+        if(gantt_pid[i] == -1)
+            printf("| idle ");
+        else
+            printf("| P%d ", gantt_pid[i]);
+    }
+    printf("|\n");
+    printf("%d", gantt_time[0]);
+    for(i = 1; i <= gantt_index; i++) {
+        printf("     %d", gantt_time[i]);
+    }
+    printf("\n");
+    return 0;
+}
