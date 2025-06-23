@@ -185,3 +185,136 @@ int main() {
     }
     return 0;
 }
+
+
+---------------------------------------
+### INDEXED FILE ALLOCATION 
+
+#include <stdio.h>
+struct IndexedFile {
+    char name;
+    int index_block;
+    int size;
+    int blocks[10];
+};
+int main() {
+    int n, i, j;
+    struct IndexedFile files[10];
+    printf("Indexed File Allocation\n");
+    printf("Enter number of files: ");
+    scanf("%d", &n);
+    getchar(); // Clear newline
+    for (i = 0; i < n; i++) {
+        printf("\nEnter name of file %d: ", i + 1);
+        scanf("%c", &files[i].name);
+        getchar(); // Consume newline
+        printf("Enter index block number for file %c: ", files[i].name);
+        scanf("%d", &files[i].index_block);
+        printf("Enter number of blocks used by file %c: ", files[i].name);
+        scanf("%d", &files[i].size);
+        printf("Enter block numbers: ");
+        for (j = 0; j < files[i].size; j++) {
+            scanf("%d", &files[i].blocks[j]);
+        }
+        getchar(); // Consume newline
+    }
+    printf("\nFile\tIndex Block\tSize\tBlocks\n");
+    for (i = 0; i < n; i++) {
+        printf("%c\t%d\t\t%d\t", files[i].name, files[i].index_block, files[i].size);
+        for (j = 0; j < files[i].size; j++) {
+            printf("%d", files[i].blocks[j]);
+            if (j != files[i].size - 1)
+                printf(", ");
+        }
+        printf("\n");
+    }
+    return 0;
+}
+
+
+## SEQUENTIAL 
+
+
+#include <stdio.h>
+struct SequentialFile {
+    int start_block;
+    int length;
+};
+int main() {
+    int n, i, file_number;
+    struct SequentialFile files[10];
+    printf("Sequential File Allocation\n");
+    printf("Enter number of files: ");
+    scanf("%d", &n);
+    for (i = 0; i < n; i++) {
+        printf("Enter starting block of file %d: ", i + 1);
+        scanf("%d", &files[i].start_block);
+        printf("Enter length (no. of blocks) for file %d: ", i + 1);
+        scanf("%d", &files[i].length);
+    }
+    printf("\nFile\tStart Block\tLength\n");
+    for (i = 0; i < n; i++) {
+        printf("%d\t%d\t\t%d\n", i + 1, files[i].start_block, files[i].length);
+    }
+    printf("\nEnter file number to display blocks: ");
+    scanf("%d", &file_number);
+    if (file_number >= 1 && file_number <= n) {
+        int start = files[file_number - 1].start_block;
+        int length = files[file_number - 1].length;
+        printf("Blocks occupied by file %d: ", file_number);
+        for (i = 0; i < length; i++) {
+            printf("%d ", start + i);
+        }
+        printf("\n");
+    } else {
+        printf("Invalid file number.\n");
+    }
+    return 0;
+}
+
+
+
+#LINKED 
+
+#include <stdio.h>
+struct LinkedFile {
+    char name;
+    int start;
+    int size;
+    int blocks[10];
+};
+int main() {
+    int n, i, j;
+    struct LinkedFile files[10];
+    printf("Linked File Allocation\n");
+    printf("Enter number of files: ");
+    scanf("%d", &n);
+    getchar(); // Clear newline character
+    for (i = 0; i < n; i++) {
+        printf("Enter name of file %d: ", i + 1);
+        scanf("%c", &files[i].name);
+        getchar(); // To consume newline
+        printf("Enter starting block of file %c: ", files[i].name);
+        scanf("%d", &files[i].start);
+        printf("Enter number of blocks: ");
+        scanf("%d", &files[i].size);
+        printf("Enter block numbers: ");
+        for (j = 0; j < files[i].size; j++) {
+            scanf("%d", &files[i].blocks[j]);
+        }
+        getchar(); // To consume newline
+    }    printf("\nFile\tStart\tSize\tBlocks\n");
+    for (i = 0; i < n; i++) {
+        printf("%c\t%d\t%d\t", files[i].name, files[i].start, files[i].size);
+        for (j = 0; j < files[i].size; j++) {
+            printf("%d", files[i].blocks[j]);
+            if (j != files[i].size - 1)
+                printf(" --> ");
+        }
+        printf("\n");
+    }
+    return 0;
+}
+---------------------------------------
+
+
