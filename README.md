@@ -318,3 +318,217 @@ int main() {
 ---------------------------------------
 
 
+#FCFS page replacement
+
+
+#include <stdio.h>
+int main() { int pages[100], frames[10], n, f, i, j, k = 0, faults = 0, hit = 0, found;
+printf("Enter number of pages: "); 
+scanf("%d", &n); 
+printf("Enter the page reference string:\n"); 
+for(i = 0; i < n; i++) { 
+    scanf("%d", &pages[i]); 
+} 
+printf("Enter number of frames: "); 
+scanf("%d", &f); 
+// Initialize all frames to -1 (empty) 
+for(i = 0; i < f; i++) { 
+    frames[i] = -1; 
+} 
+printf("\nPage\tFrames\t\tPage Fault\n"); 
+for(i = 0; i < n; i++) { 
+    found = 0; 
+    // Check if page is already in frame 
+    for(j = 0; j < f; j++) { 
+        if(frames[j] == pages[i]) { 
+            found = 1; 
+            hit++; 
+            break; 
+        } 
+    } 
+    if(!found) { 
+        // Replace the oldest page using FIFO 
+        frames[k] = pages[i]; 
+        k = (k + 1) % f; // circular queue 
+        faults++; 
+    } 
+    // Display frame contents 
+    printf("%d\t", pages[i]); 
+    for(j = 0; j < f; j++) { 
+        if(frames[j] != -1) 
+            printf("%d ", frames[j]); 
+        else 
+            printf("- "); 
+    } 
+    printf("\t%s\n", found ? "Hit" : "Miss"); 
+} 
+printf("\nTotal Page Faults: %d", faults); 
+printf("\nTotal Page Hits: %d\n", hit); 
+return 0; 
+}
+
+
+
+#LRU PAGE 
+
+#include <stdio.h>
+int findLRU(int time[], int f) {
+    int min = time[0], pos = 0;
+    for (int i = 1; i < f; i++) {
+        if (time[i] < min) {
+            min = time[i];
+            pos = i;
+        }
+    }
+    return pos;
+}
+int main() {
+    int pages[100], frames[10], time[10], n, f;
+    int i, j, pos, faults = 0, counter = 0, hits = 0;
+    int found;
+    printf("Enter number of pages: ");
+    scanf("%d", &n);
+    printf("Enter the page reference string:\n");
+    for (i = 0; i < n; i++) {
+        scanf("%d", &pages[i]);
+        }
+    printf("Enter number of frames: ");
+    scanf("%d", &f);
+    for (i = 0; i < f; i++) {
+        frames[i] = -1;
+        time[i] = 0;
+    }    printf("\nPage\tFrames\t\tStatus\n");
+    for (i = 0; i < n; i++) {
+        found = 0;
+        for (j = 0; j < f; j++) {
+            if (frames[j] == pages[i]) {
+                counter++;
+                time[j] = counter;
+                found = 1;
+                hits++;
+                break;
+            }
+        }
+       if (!found) {
+            int empty_found = 0;
+            for (j = 0; j < f; j++) {
+                if (frames[j] == -1) {
+                    counter++;
+                    frames[j] = pages[i];
+                    time[j] = counter;
+                    faults++;
+                    empty_found = 1;
+                    break;
+                }
+            }
+            if (!empty_found) {
+                pos = findLRU(time, f);
+                counter++;
+                frames[pos] = pages[i];
+                time[pos] = counter;
+                faults++;
+            }
+        }
+        // Print page and frame status
+        printf("%d\t", pages[i]);
+        for (j = 0; j < f; j++) {
+            if (frames[j] != -1)
+                printf("%d ", frames[j]);
+            else
+                printf("- ");
+        }
+        printf("\t%s\n", found ? "Hit" : "Miss");
+    }
+    printf("\nTotal Page Faults: %d", faults);
+    printf("\nTotal Page Hits: %d\n", hits);
+    return 0;
+}
+
+
+# OPTIMAL PAGE REPLACEMENT
+
+
+#include <stdio.h>
+int predict(int pages[], int frames[], int n, int index, int f) {
+    int farthest = index;
+    int result = -1;
+    int i, j;
+    for (i = 0; i < f; i++) {
+        int j;
+        for (j = index; j < n; j++) {
+            if (frames[i] == pages[j]) {
+                if (j > farthest) {
+                    farthest = j;
+                    result = i;
+                }
+                break;
+            }
+        }
+        // If a page is never used again
+        if (j == n)
+            return i;
+    }
+    // If all pages are going to be used again
+    return (result == -1) ? 0 : result;
+}
+int main() {
+    int pages[100], frames[10], n, f;
+    int i, j, faults = 0, hits = 0;
+    int found;
+    printf("Enter number of pages: ");
+    scanf("%d", &n);
+    printf("Enter the page reference string:\n");
+    for (i = 0; i < n; i++) {
+        scanf("%d", &pages[i]);
+    }
+    printf("Enter number of frames: ");
+    scanf("%d", &f);
+    for (i = 0; i < f; i++)
+        frames[i] = -1;
+printf("\nPage\tFrames\t\tStatus\n");
+    for (i = 0; i < n; i++) {
+        found = 0;
+        // Page Hit
+        for (j = 0; j < f; j++) {
+            if (frames[j] == pages[i]) {
+                found = 1;
+                hits++;
+                break;
+            }
+        }
+        // Page Miss
+        if (!found) {
+            int replaced = 0;
+            // Empty slot found
+            for (j = 0; j < f; j++) {
+                if (frames[j] == -1) {
+                    frames[j] = pages[i];
+                    faults++;
+                    replaced = 1;
+                    break;
+                }
+            }
+            // No empty frame -> Replace optimal
+            if (!replaced) {
+                int pos = predict(pages, frames, n, i + 1, f);
+                frames[pos] = pages[i];
+                faults++;
+            }
+        }
+        // Output current status
+        printf("%d\t", pages[i]);
+        for (j = 0; j < f; j++) {
+            if (frames[j] != -1)
+                printf("%d ", frames[j]);
+            else
+                printf("- ");
+        }
+        printf("\t%s\n", found ? "Hit" : "Miss");
+    }
+    printf("\nTotal Page Faults: %d", faults);
+    printf("\nTotal Page Hits: %d\n", hits);
+    return 0;
+}
+
+
+---------------------------------------
