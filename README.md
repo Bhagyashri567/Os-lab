@@ -735,3 +735,306 @@ m
     printf("\n");
     return 0;
 }
+
+
+
+### NON PREEMPTIVE PRIORITY 
+
+
+#include <stdio.h>
+int main() {
+    int n, i, j, time = 0;
+    int at[20], bt[20], ct[20], tat[20], wt[20], pid[20], priority[20];
+    int completed[20] = {0}, total_completed = 0;
+    float total_wt = 0, total_tat = 0;
+    int gantt_pid[20], gantt_start[20], gantt_end[20], gantt_index = 0;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    for(i = 0; i < n; i++) {
+        pid[i] = i + 1;
+        printf("Enter Arrival Time for P%d: ", pid[i]);
+        scanf("%d", &at[i]);
+        printf("Enter Burst Time for P%d: ", pid[i]);
+        scanf("%d", &bt[i]);
+        printf("Enter Priority for P%d (lower number = higher priority): ", pid[i]);
+        scanf("%d", &priority[i]);
+    }
+    while(total_completed < n) {
+        int highest = -1;
+        int min_priority = 9999;
+        for(i = 0; i < n; i++) {
+            if(at[i] <= time && !completed[i]) {
+                if(priority[i] < min_priority) {
+                    min_priority = priority[i];
+                    highest = i;
+                } else if(priority[i] == min_priority) {
+                    if(at[i] < at[highest]) {
+                        highest = i;
+                    }
+                }
+            }
+        }
+        if(highest == -1) {
+            time++;
+        } else {
+            gantt_pid[gantt_index] = pid[highest];
+            gantt_start[gantt_index] = time;
+            time += bt[highest];
+            ct[highest] = time;
+            completed[highest] = 1;
+            total_completed++;
+            tat[highest] = ct[highest] - at[highest];
+            wt[highest] = tat[highest] - bt[highest];
+            total_tat += tat[highest];
+            total_wt += wt[highest];
+            gantt_end[gantt_index] = time;
+            gantt_index++;
+        }
+    }    printf("\nProcess\tAT\tBT\tPri\tCT\tTAT\tWT\n");
+    for(i = 0; i < n; i++) {        printf("P%d\t%d\t%d\t%d\t%d\t%d\t%d\n", pid[i], at[i], bt[i], priority[i], ct[i], tat[i], wt[i]);
+    }
+    printf("\nAverage Waiting Time = %.2f", total_wt / n);
+    printf("\nAverage Turnaround Time = %.2f\n", total_tat / n);
+    printf("\nGantt Chart:\n|");
+    for(i = 0; i < gantt_index; i++) {
+        printf(" P%d |", gantt_pid[i]);
+    }
+    printf("\n%d", gantt_start[0]);
+    for(i = 0; i < gantt_index; i++) {
+        printf("    %d", gantt_end[i]);
+    }
+    printf("\n");
+    return 0;
+}
+
+
+
+
+### PREEMPTIVE PRIORITYY 
+
+
+#include <stdio.h>
+int main() {
+    int n, i, time = 0, highest = -1, completed = 0;
+    int at[20], bt[20], rt[20], pr[20], ct[20], tat[20], wt[20], pid[20];
+    float total_tat = 0, total_wt = 0;
+    int gantt_pid[100], gantt_time[100], gantt_index = 0;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    for(i = 0; i < n; i++) {
+        pid[i] = i + 1;
+        printf("Enter Arrival Time for P%d: ", pid[i]);
+        scanf("%d", &at[i]);
+        printf("Enter Burst Time for P%d: ", pid[i]);
+        scanf("%d", &bt[i]);
+        printf("Enter Priority for P%d (lower number = higher priority): ", pid[i]);
+        scanf("%d", &pr[i]);
+        rt[i] = bt[i];
+    }
+    int prev_process = -1;
+    while(completed < n) {
+        highest = -1;
+        int min_priority = 9999;
+        for(i = 0; i < n; i++) {
+            if(at[i] <= time && rt[i] > 0) {
+                if(pr[i] < min_priority) {
+                    min_priority = pr[i];
+                    highest = i;
+                } else if(pr[i] == min_priority) {
+                    if(at[i] < at[highest]) {
+                        highest = i;
+                    }
+                }
+            }
+        }
+        if(highest == -1) {
+            if(prev_process != -1) {
+                gantt_pid[gantt_index] = -1;                gantt_time[gantt_index++] = time;
+                prev_process = -1;
+            }
+            time++;
+            continue;
+        }
+        if(prev_process != pid[highest]) {
+            gantt_pid[gantt_index] = pid[highest];
+            gantt_time[gantt_index++] = time;
+            prev_process = pid[highest];
+        }
+        rt[highest]--;
+        time++;
+        if(rt[highest] == 0) {
+            completed++;
+            ct[highest] = time;
+            tat[highest] = ct[highest] - at[highest];
+            wt[highest] = tat[highest] - bt[highest];
+            total_tat += tat[highest];
+            total_wt += wt[highest];
+        }
+    }
+    gantt_time[gantt_index] = time;    printf("\nProcess\tAT\tBT\tPri\tCT\tTAT\tWT\n");
+    for(i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\t%d\t%d\t%d\n", pid[i], at[i], bt[i], pr[i], ct[i], tat[i], wt[i]);
+    }
+    printf("\nAverage Waiting Time = %.2f", total_wt / n);
+    printf("\nAverage Turnaround Time = %.2f\n", total_tat / n);
+    printf("\nGantt Chart:\n");
+    for(i = 0; i < gantt_index; i++) {
+        if(gantt_pid[i] == -1)
+            printf("| idle ");
+        else
+            printf("| P%d ", gantt_pid[i]);
+    }
+    printf("|\n");
+    printf("%d", gantt_time[0]);
+    for(i = 1; i <= gantt_index; i++) {
+        printf("     %d", gantt_time[i]);
+    }
+    printf("\n");
+    return 0;
+}
+
+
+
+
+#### ROUND ROBIN 
+
+
+#include <stdio.h>
+int main() {
+    int n, i, time = 0, tq, count = 0;
+    int at[20], bt[20], rt[20], ct[20], wt[20], tat[20], pid[20];
+    int completed = 0;
+    int gantt_pid[100], gantt_time[100], gantt_index = 0;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    for(i = 0; i < n; i++) {
+        pid[i] = i + 1;
+        printf("Enter Arrival Time for P%d: ", pid[i]);
+        scanf("%d", &at[i]);
+        printf("Enter Burst Time for P%d: ", pid[i]);
+        scanf("%d", &bt[i]);
+        rt[i] = bt[i];
+    }
+    printf("Enter Time Quantum: ");
+    scanf("%d", &tq);
+    int queue[100], front = 0, rear = 0;
+    int visited[20] = {0};
+    // Enqueue processes which have arrived at time 0
+    for(i = 0; i < n; i++) {
+        if(at[i] == 0) {
+            queue[rear++] = i;
+            visited[i] = 1;
+        }
+    }
+    while(completed < n) {
+        if(front == rear) {
+            // CPU idle, increment time and enqueue newly arrived processes
+            time++;
+            for(i = 0; i < n; i++) {
+                if(at[i] == time && visited[i] == 0) {
+                    queue[rear++] = i;
+                    visited[i] = 1;
+                }
+            }
+            continue;
+        }
+        int idx = queue[front++];
+        if(rt[idx] > 0) {
+            // Record start time for Gantt chart if process changed
+            if(gantt_index == 0 || gantt_pid[gantt_index - 1] != pid[idx]) {
+                gantt_pid[gantt_index] = pid[idx];                gantt_time[gantt_index++] = time;
+            }
+          int exec_time = (rt[idx] < tq) ? rt[idx] : tq;
+            rt[idx] -= exec_time;
+            time += exec_time;
+            // Enqueue newly arrived processes during execution
+            for(i = 0; i < n; i++) {
+                if(at[i] > time - exec_time && at[i] <= time && visited[i] == 0) {
+                    queue[rear++] = i;
+                    visited[i] = 1;
+                }
+            }
+            if(rt[idx] == 0) {
+                completed++;
+                ct[idx] = time;
+                tat[idx] = ct[idx] - at[idx];
+                wt[idx] = tat[idx] - bt[idx];
+            } else {
+                queue[rear++] = idx; // Re-queue the process if not finished
+            }
+        }
+    }
+    gantt_time[gantt_index] = time;   printf("\nProcess\tAT\tBT\tCT\tTAT\tWT\n");
+    for(i = 0; i < n; i++) {    printf("P%d\t%d\t%d\t%d\t%d\t%d\n", pid[i], at[i], bt[i], ct[i], tat[i], wt[i]);
+    }
+    float total_wt = 0, total_tat = 0;
+    for(i = 0; i < n; i++) {
+        total_wt += wt[i];
+        total_tat += tat[i];
+    }
+    printf("\nAverage Waiting Time = %.2f", total_wt / n);
+    printf("\nAverage Turnaround Time = %.2f\n", total_tat / n);
+    printf("\nGantt Chart:\n|");
+    for(i = 0; i < gantt_index; i++) {
+        printf(" P%d |", gantt_pid[i]);
+    }
+    printf("\n%d", gantt_time[0]);
+    for(i = 1; i <= gantt_index; i++) {
+        printf("    %d", gantt_time[i]);
+    }
+    printf("\n");
+    return 0;
+}
+
+
+_______________________________________
+
+
+
+#### FORKKKK GETPID 
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+int main() {
+    pid_t pid;
+    printf("Before the Fork process ID: %d\n", getpid());
+    pid = fork();
+    if (pid < 0) {
+        // fork failed
+        perror("fork failed");
+        exit(1);
+    }
+    else if (pid == 0) {
+        // child process
+        printf("After the Fork, Child Process ID = %d\n", getpid());
+    }
+    else {
+        // parent process
+        printf("After the Fork, Parent Process ID = %d\n", getpid());
+    }
+    return 0;
+}
+
+
+##### SLEEP 
+
+
+
+#!/bin/bash
+# Simulate getpid in the parent process
+echo "Parent PID: $$"
+# Start a background process to simulate the child
+sleep 1 &
+# Get the PID of the last background process (child)
+child_pid=$!
+# Simulate getpid in the child process
+echo "Child PID: $child_pid"
+# Print parent PID from the child's perspective (background process)
+echo "Parent PID from child: $$" &
+# Wait for the background child process to finish
+wait $child_pid
+
+
+______________________________________
