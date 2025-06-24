@@ -1038,3 +1038,53 @@ wait $child_pid
 
 
 ______________________________________
+
+
+
+#### PRODUCER CONSUMER PROBLEM 
+
+
+
+#include <iostream>
+using namespace std;
+int mutex = 1, full = 0, empty = 3, x = 0;
+int wait(int s)  { return --s; }
+int signal(int s){ return ++s; }
+void producer() {
+    mutex = wait(mutex);
+   full = signal(full);
+    empty = wait(empty);
+    x++;
+    cout << "Producer produces item " << x << endl;
+    mutex = signal(mutex);
+}
+void consumer() {
+    mutex = wait(mutex);
+    full = wait(full);
+    empty = signal(empty);
+    cout << "Consumer consumes item " << x << endl;
+    x--;
+    mutex = signal(mutex);
+}
+int main() {
+    int choice;
+    while (true) {
+        cout << "\n1.PRODUCER\n2.CONSUMER\n3.EXIT\nEnter your choice: ";
+        cin >> choice;
+        switch (choice) {
+            case 1:
+                if (mutex == 1 && empty != 0)
+                    producer();
+                else
+                    cout << "BUFFER IS FULL" << endl;
+               break;
+            case 2:
+                if (mutex == 1 && full != 0)
+                    consumer();
+                else               cout << "BUFFER IS EMPTY" << endl;
+              break;
+            case 3:
+              return 0;
+        }
+    } 
+}
