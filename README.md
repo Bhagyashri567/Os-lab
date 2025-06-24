@@ -19,6 +19,7 @@ CLOSE cur;
 END$$
 DELIMITER ;
 
+--------------------------------------
 
 ##### FUNCTION 
 
@@ -38,7 +39,7 @@ BEGIN
 END$$
 
 DELIMITER ;
-
+--------------------------------------
 
 EXAMPLE ---- 
 
@@ -63,7 +64,7 @@ BEGIN
 END$$
 DELIMITER ;
 
-
+---------------------------------------
 
 #### Trigger 
 
@@ -77,10 +78,60 @@ BEGIN
     END IF;
 END;
 
+---------------------------------------
+
+1 ))) Find employees who earn more than the average salary.
+
+SELECT name, salary
+FROM employees
+WHERE salary > (
+ SELECT AVG(salary)
+ FROM employees );
 
 
+2 )) Find employees who work in the same department as 'John'.
+
+SELECT name, department_id
+FROM employees
+WHERE department_id IN (
+ SELECT department_id
+ FROM employees
+ WHERE name = 'John' );
 
 
+3 ))  Find employees whose salary is higher than the average salary of their department.
 
+SELECT e1.name, e1.salary, e1.department_id
+FROM employees e1
+WHERE e1.salary > (
+ SELECT AVG(e2.salary)
+ FROM employees e2
+ WHERE e1.department_id = e2.department_id );
+
+
+4 )) Get the number of employees in each department.
+
+SELECT department_id,
+ (SELECT COUNT(*) FROM employees e2 
+ WHERE e2.department_id = e1.department_id) AS 
+employee_count FROM employees e1
+GROUP BY department_id;
 
  
+5 )) Find departments where the average salary is more than 50,000.
+
+SELECT department_id, avg_salary
+FROM (
+ SELECT department_id, AVG(salary) AS avg_salary
+ FROM employees
+ GROUP BY department_id ) AS dept_avg
+WHERE avg_salary > 50000;
+
+
+6 )) Find employees who earn more than the average salary using JOIN.
+
+SELECT e1.name, e1.salary FROM employees e1
+JOIN (SELECT AVG(salary) AS avg_salary FROM employees) e2
+ON e1.salary > e2.avg_salary;
+
+---------------------------------------
